@@ -16,12 +16,12 @@ double Epoch::toSeconds() const {
 Matrix<double> getStaveVectorXV(const glonass_nav_data_block& msgSV) {
 
 	Matrix<double> StateVector(6, 1, 0);
-	StateVector(0, 0) = msgSV.x;
-	StateVector(1, 0) = msgSV.y;
-	StateVector(2, 0) = msgSV.z;
-	StateVector(3, 0) = msgSV.vx;
-	StateVector(4, 0) = msgSV.vy;
-	StateVector(5, 0) = msgSV.vz;
+	StateVector(0) = msgSV.x;
+	StateVector(1) = msgSV.y;
+	StateVector(2) = msgSV.z;
+	StateVector(3) = msgSV.vx;
+	StateVector(4) = msgSV.vy;
+	StateVector(5) = msgSV.vz;
 	return StateVector;
 }
 
