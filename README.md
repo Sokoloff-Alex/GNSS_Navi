@@ -1,5 +1,4 @@
-GNSS Navigation module
+# GNSS Navigation module
 
--------------------------------
+Reads observation and navigation messave from RINEX files ver. 3.02
 
-Reads observation and navigarion messave from RINEX files ver. 3.02
