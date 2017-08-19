@@ -31,9 +31,9 @@ int main() {
 	int w = 16;
 
 	string obs_file_path =
-			"D:/Dev/GNSS/obs/WTZZ00DEU_S_20171440000_15M_01S_MO.00o";
+			"D:/Dev/GNSS/obs/2017/144/WTZZ00DEU_S_20171440000_15M_01S_MO.00o";
 	string RN_file_path =
-			"D:/Dev/GNSS/obs/WTZ200DEU_R_20171440000_01D_RN.rnx/WTZ200DEU_R_20171440000_01D_RN.RNX";
+			"D:/Dev/GNSS/obs/2017/144/WTZ200DEU_R_20171440000_01D_RN.rnx/WTZ200DEU_R_20171440000_01D_RN.RNX";
 	string out_file_path = "D:/Dev/GNSS/obs/xyzt.txt";
 
 	try {
@@ -61,7 +61,7 @@ int main() {
 				<< setprecision(1) << obs.epoch.toSeconds() << setw(5)
 				<< setprecision(0) << commonSV.size() << endl;
 
-		for (int sec = 0; sec < 60 * 15 - 1; ++sec) {
+		for (int sec = 0; sec < 10 - 1; ++sec) {
 			Observations obs = parseRINEX_Epoch(obs_file);
 			orbs = propagateOrbits(orbs, obs.epoch, 1);
 			commonSV = intersect(obs, orbs, "R");

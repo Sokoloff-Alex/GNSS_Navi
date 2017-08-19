@@ -35,6 +35,8 @@ Matrix<double> solverLS(const Observations& obs, const Orbits& orbs, const Matri
 	Matrix<double> Xs(3, 1, 0);
 	Matrix<double> Vs(3, 1, 0);
 
+	Orbits orbs_cor = orbs;
+
 	for (int iSat = 0; iSat < numberOfSats; ++iSat) {
 
 		Xs(0) = orbs.StateVector.at(sats[iSat])(0);
@@ -53,6 +55,10 @@ Matrix<double> solverLS(const Observations& obs, const Orbits& orbs, const Matri
 
 		Xs(0) = cos(dOmega) * Xs(0) + sin(dOmega) * Xs(1);
 		Xs(1) = -sin(dOmega) * Xs(0) + cos(dOmega) * Xs(1);
+
+		orbs_cor.StateVector.at(sats[iSat])(0) = Xs(0);
+		orbs_cor.StateVector.at(sats[iSat])(1) = Xs(1);
+		orbs_cor.StateVector.at(sats[iSat])(2) = Xs(2);
 	}
 
 	// dummies
@@ -68,12 +74,12 @@ Matrix<double> solverLS(const Observations& obs, const Orbits& orbs, const Matri
 	for (int iteration = 0; iteration < maxIter; ++iteration) {
 		for (int iSat = 0; iSat < numberOfSats; ++iSat) {
 
-			Xs(0) = orbs.StateVector.at(sats[iSat])(0);
-			Xs(1) = orbs.StateVector.at(sats[iSat])(1);
-			Xs(2) = orbs.StateVector.at(sats[iSat])(2);
-			Vs(0) = orbs.StateVector.at(sats[iSat])(3);
-			Vs(1) = orbs.StateVector.at(sats[iSat])(4);
-			Vs(2) = orbs.StateVector.at(sats[iSat])(5);
+			Xs(0) = orbs_cor.StateVector.at(sats[iSat])(0);
+			Xs(1) = orbs_cor.StateVector.at(sats[iSat])(1);
+			Xs(2) = orbs_cor.StateVector.at(sats[iSat])(2);
+			Vs(0) = orbs_cor.StateVector.at(sats[iSat])(3);
+			Vs(1) = orbs_cor.StateVector.at(sats[iSat])(4);
+			Vs(2) = orbs_cor.StateVector.at(sats[iSat])(5);
 
 			// unit vectors
 			Matrix<double> e_sr = (Xs - RecXYZ) / norm(Xs - RecXYZ);
@@ -89,8 +95,6 @@ Matrix<double> solverLS(const Observations& obs, const Orbits& orbs, const Matri
 				e_rec = RecXYZ / norm(RecXYZ);
 				cos_z = (e_rec.transpose() * e_sr)(0, 0);
 				T = Tzpd / cos_z;
-			} else {
-				T = Tzpd;
 			}
 
 			// Relativistic correction
@@ -105,7 +109,7 @@ Matrix<double> solverLS(const Observations& obs, const Orbits& orbs, const Matri
 		RecXYZ(0) = rec_est(0);
 		RecXYZ(1) = rec_est(1);
 		RecXYZ(2) = rec_est(2);
-//		printXYZT(rec_est);
+		printXYZT(rec_est);
 	}
 	return rec_est;
 }
