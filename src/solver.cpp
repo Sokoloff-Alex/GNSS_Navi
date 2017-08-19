@@ -23,7 +23,7 @@ Matrix<double> solverLS(const Observations& obs, const Orbits& orbs, const Matri
 		return Matrix<double>(4, 1, 0.0) ;
 	}
 
-	// constants
+	// constants, all units in SI !!!
 	const double c = 299792458; // [m/s]
 	const double Omega_E_rate = 0.000072921151467; //[rad/s]
 	const double Tzpd = 2.3; // [m]
