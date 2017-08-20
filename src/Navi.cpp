@@ -65,7 +65,7 @@ int main() {
 //		}
 		set<int> commonSV = intersect(obs, orbs, "R");
 		printSet(commonSV);
-		commonSV = {2, 3, 4 ,5, 11, 12, 13, 18, 19};
+//		commonSV = {2, 3, 4 ,5, 11, 12, 13, 18, 19};
 
 		Observations obsR = select(obs, commonSV, "R");
 		Orbits orbR = select(orbs, commonSV);
