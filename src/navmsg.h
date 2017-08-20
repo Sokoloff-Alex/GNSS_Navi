@@ -28,10 +28,11 @@ public:
 	int day;
 	int hour;
 	int minutes;
-	float seconds;
+	double seconds;
 
+//	Epoch(const int& myYear, const int& myMonth, const int& myDay, const int& myHour, const int& myMinute, const double& mySecond);
 	double toSeconds() const;
-	Epoch addSec(const int& sec);
+	Epoch addSec(const double& sec);
 };
 
 class Orbits {
@@ -39,7 +40,12 @@ public:
 	Epoch epoch;
 	map<int, Matrix<double> > StateVector;
 	map<int, Matrix<double> > Atb;
+	map<int, double> SVClockBias;
+	map<int, double> SVRelativeFrequencyBias;
+	map<int, int> FrequencyNumber;
 	vector<int> sats;
+	double SystemCorrectiontTme; // TauC
+
 };
 
 struct glonass_nav_data_block {

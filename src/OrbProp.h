@@ -25,6 +25,10 @@ Orbits propagateOrbits(const glonass_nav_msg& glo_msg, const Epoch& TargetEpoch)
 
 Orbits propagateOrbits(Orbits& InitOrbits, const Epoch& TargetEpoch, const int& stepT);
 
+Matrix<double> ECEFtoECI(const Matrix<double>& vECEF, const Epoch& epoch_UTC);
+Matrix<double> ECItoECEF(const Matrix<double>& vECI, const Epoch& epoch_UTC);
+
 void printStateVector(const Matrix<double>& StateVector);
+
 
 #endif /* ORBPROP_H_ */

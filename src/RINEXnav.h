@@ -25,6 +25,9 @@ glonass_nav_msg& getGLONASSnavmsgBlock(ifstream& textfile, glonass_nav_msg& glo_
 
 void printGLOnavmsg(const glonass_nav_msg& glo_msg);
 
+double stoDouble(const string& strValue, const string& strFormat);
+
 double stoDouble(const string& strValue);
+
 
 #endif /* RINEXNAV_H_ */

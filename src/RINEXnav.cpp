@@ -14,15 +14,6 @@
 #include "navmsg.h"
 using namespace std;
 
-// todo: add const string& strFormat
-double stoDouble(const string& strValue) {
-	// defined for format: D19.12
-	double Value = stod(strValue.substr(0, 15));
-	double Power = stod(strValue.substr(16, 3));
-	Value *= pow(10, Power);
-	return Value;
-}
-
 glonass_nav_msg& getGLONASSnavmsgBlock(ifstream& textfile,
 		glonass_nav_msg& glo_nav_msg) {
 	string str_line;
@@ -38,7 +29,7 @@ glonass_nav_msg& getGLONASSnavmsgBlock(ifstream& textfile,
 	epoch.day = stoi(str_line.substr(12, 2));
 	epoch.hour = stoi(str_line.substr(15, 2));
 	epoch.minutes = stoi(str_line.substr(18, 2));
-	epoch.seconds = stof(str_line.substr(21, 2));
+	epoch.seconds = stod(str_line.substr(21, 2));
 
 	glo_nav_data.epoch = epoch;
 	glo_nav_data.SVClockBias = stoDouble(str_line.substr(23, 19));
@@ -80,7 +71,8 @@ glonass_nav_msg parse_GLONASS_Nav(ifstream& textfile) {
 			break;
 		}
 	}
-	glo_nav_msg.header.SystemCorrectiontTme = stod(str_line.substr(6, 16));
+
+	glo_nav_msg.header.SystemCorrectiontTme = stoDouble(str_line.substr(5, 17), "D17.10");
 	getline(textfile, str_line);
 	glo_nav_msg.header.LeapSeconds = stoi(str_line.substr(0, 6));
 
@@ -129,3 +121,23 @@ void printGLOnavmsg(const glonass_nav_msg& glo_msg) {
 				<< navBlock.second.z << "   [m] " << navBlock.second.epoch.minutes << endl;
 	}
 }
+
+double stoDouble(const string& strValue, const string& strFormat) {
+//	 example: D17.10	" 1.5832483768D-08"
+	int LenTotal = stoi(strFormat.substr(1,2));
+	int LenValue = LenTotal - 4;
+	double Value = stod(strValue.substr(0, LenValue));
+	double Power = stod(strValue.substr(LenValue + 1, 3));
+	Value *= pow(10, Power);
+	return Value;
+}
+
+double stoDouble(const string& strValue) {
+	// defined for format: D19.12
+	double Value = stod(strValue.substr(0, 15));
+	double Power = stod(strValue.substr(16, 3));
+	Value *= pow(10, Power);
+	return Value;
+}
+
+

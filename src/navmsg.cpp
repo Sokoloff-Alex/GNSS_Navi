@@ -8,6 +8,32 @@
 #include <set>
 #include "navmsg.h"
 
+//Epoch::Epoch(const int& myYear = 1970, const int& myMonth = 1,
+//		const int& myDay = 1, const int& myHour = 0, const int& myMinute = 0,
+//		const double& mySecond = 0) {
+//	year = myYear;
+//	month = myMonth;
+//	day = myDay;
+//	hour = myHour;
+//	minutes = myMinute;
+//	seconds = mySecond;
+//}
+
+Epoch Epoch::addSec(const double& sec) {
+
+	double timeTotalSec = this->toSeconds() + sec;
+
+	seconds = fmod(timeTotalSec, 60);
+	minutes = (int)(timeTotalSec - seconds) % (60 * 60);
+	hour = (int)(timeTotalSec - seconds - (minutes * 60)) % (60 * 60 * 24);
+
+	if (hour >= 24) {
+		hour -= 24;
+		day++;
+	}
+	return *this;
+}
+
 double Epoch::toSeconds() const {
 	double timeSeconds = hour * 3600 + minutes * 60 + seconds;
 	return timeSeconds;
@@ -36,29 +62,17 @@ Matrix<double> getStaveVectorA(const glonass_nav_data_block& msgSV) {
 
 Orbits select(const Orbits& orbs, const set<int>& sats) {
 	Orbits orbs_selected;
-	map<int, Matrix<double> > StateVectors;
 	for (int sat : sats) {
-		StateVectors[sat] = orbs.StateVector.at(sat);
+		orbs_selected.StateVector[sat] = orbs.StateVector.at(sat);
+		orbs_selected.FrequencyNumber[sat] = orbs.FrequencyNumber.at(sat);
+		orbs_selected.SVClockBias[sat] = orbs.SVClockBias.at(sat);
+		orbs_selected.SVRelativeFrequencyBias[sat] =
+				orbs.SVRelativeFrequencyBias.at(sat);
+		orbs_selected.Atb[sat] = orbs.Atb.at(sat);
 		orbs_selected.sats.push_back(sat);
 	}
-	orbs_selected.StateVector = StateVectors;
+	orbs_selected.SystemCorrectiontTme = orbs.SystemCorrectiontTme;
 	orbs_selected.epoch = orbs.epoch;
 	return orbs_selected;
 }
 
-Epoch Epoch::addSec(const int& sec) {
-	seconds += sec;
-	if ( (seconds / 60) > 1 ) {
-		seconds -= 60;
-		minutes++;
-		if (!(minutes/60)) {
-			minutes -= 60;
-			hour++;
-			if (!(hour/24)) {
-				hour -= 60;
-				day++;
-			}
-		}
-	}
-	return *this;
-}

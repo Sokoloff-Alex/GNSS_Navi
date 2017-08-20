@@ -336,7 +336,7 @@ template<typename T>
 void Matrix<T>::print() const {
 	for (int i = 0; i < rows; ++i) {
 		for (int j = 0; j < cols; ++j) {
-			cout << fixed << setw(9) << setprecision(6) << this->mat[i][j] << " ";
+			cout << fixed << setw(20) << setprecision(6) << this->mat[i][j] << " ";
 		}
 		cout << endl;
 	}
