@@ -66,8 +66,6 @@ Matrix<double> solverLS(const Observations& obs, const Orbits& orbs,
 		Matrix<double> dXs_dts(3, 1, 0);
 		dXs_dts = Vs * SVtoUT;
 		Xs -= dXs_dts;
-//		cout << "dXs_dts = " << endl;
-//		dXs_dts.print();
 
 		orbs_cor.StateVector.at(sats[iSat])(0) = Xs(0);
 		orbs_cor.StateVector.at(sats[iSat])(1) = Xs(1);
@@ -92,7 +90,7 @@ Matrix<double> solverLS(const Observations& obs, const Orbits& orbs,
 			Xs(2) = orbs_cor.StateVector.at(sats[iSat])(2);
 
 			// unit vectors
-			Matrix<double> e_sr = (Xs - RecXYZ) / norm(Xs - RecXYZ);
+			Matrix<double> e_sr = (RecXYZ - Xs) / norm(Xs - RecXYZ);
 			A(iSat, 0) = e_sr(0);
 			A(iSat, 1) = e_sr(1);
 			A(iSat, 2) = e_sr(2);
@@ -103,7 +101,7 @@ Matrix<double> solverLS(const Observations& obs, const Orbits& orbs,
 			double T = Tzpd;
 			if (norm(RecXYZ) != 0) {
 				e_rec = RecXYZ / norm(RecXYZ);
-				cos_z = (e_rec.transpose() * e_sr)(0, 0);
+				cos_z = (e_rec.transpose() * (e_sr * -1))(0, 0);
 				T = Tzpd / cos_z;
 			}
 
@@ -112,9 +110,8 @@ Matrix<double> solverLS(const Observations& obs, const Orbits& orbs,
 			double GammaN = orbs_cor.SVRelativeFrequencyBias.at(sats[iSat]);
 			double TauC = orbs_cor.SystemCorrectiontTme;
 			double tSV = orbs_cor.epoch.toSeconds();
-
-//			double SVtoUT = (TauN - GammaN * tSV + TauC);
-//			cout << "dts * c = " << fixed << setw(15) 	<< (TauN - GammaN * tSV + TauC) * c << endl;
+			double SVtoUT = (TauN - GammaN * tSV + TauC);
+			cout << "dts * c = " << fixed << setw(15) 	<< (TauN - GammaN * tSV + TauC) * c << endl;
 
 			// move known values to lhs
 			PRangeTilde(iSat) = Range(iSat) + (e_sr.transpose() * Xs)(0, 0)
@@ -123,15 +120,10 @@ Matrix<double> solverLS(const Observations& obs, const Orbits& orbs,
 
 		// LSE solution
 		rec_est = (A.transpose() * A).inverse() * (A.transpose() * PRangeTilde);
-		A.print();
+//		A.print();
 		RecXYZ(0) = rec_est(0);
 		RecXYZ(1) = rec_est(1);
 		RecXYZ(2) = rec_est(2);
-		cout << " Range" << endl;
-		Range.print();
-//		cout << " Range + knowns" << endl;
-//		PRangeTilde.print();
-//		cout << "Estimates" << endl;
 		printXYZT(rec_est);
 		Matrix<double> Resuduals(numberOfSats,1,0);
 		Resuduals = PRangeTilde - A * rec_est;
@@ -145,7 +137,7 @@ void printXYZT(const Matrix<double>& rec_est) {
 	const double c = 299792458; // [m/s]
 	int w = 16;
 	cout << fixed << setprecision(3) << setw(w) << rec_est(0) << " " << setw(w)
-			<< rec_est(1) << " " << setw(w) << rec_est(2) << " " << setw(w)
+			<< rec_est(1) << " " << setw(w) << rec_est(2) << " " << setw(w) << setprecision(9)
 			<< rec_est(3) / c << endl;
 }
 
