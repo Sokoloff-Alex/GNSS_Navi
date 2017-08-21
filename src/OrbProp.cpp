@@ -71,112 +71,38 @@ Orbits propagateOrbits(const glonass_nav_msg& glo_msg,
 		const Epoch& TargetEpoch) {
 
 	ofstream file_orb("D:/Dev/GNSS/obs/orbits.txt");
-
 	vector<int> sats;
 	Orbits LatestStatesAll;
 	Matrix<double> StateVector(6, 1, 0.0);
-	Matrix<double> A_at_Tb(3, 1, 0.0);
-//	Matrix<double> StateVectorECI(6, 1, 0.0);
-//	Matrix<double> A_at_Tb_ECI(3, 1, 0.0);
-	Matrix<double> A_at_Tb_dummy(6, 1, 0.0);
+	Matrix<double> A_tb(3, 1, 0.0);
+	Matrix<double> A_tb_dummy(6, 1, 0.0);
 	for (auto& msgSV : glo_msg.nav) {
 		Epoch EphemerisEpoch = msgSV.second.epoch;
 		if (TargetEpoch.hour == 0 && TargetEpoch.minutes <= 15) {
-			if (EphemerisEpoch.hour == 23 && EphemerisEpoch.minutes >= 30) { // propagate only recent satellites
-				int SV = msgSV.first;
-//				cout << "Propagating SV " << SV << " propagate from last day" << endl;
-				StateVector = getStaveVectorXV(msgSV.second);
-				A_at_Tb = getStaveVectorA(msgSV.second);
-				A_at_Tb_dummy(0) = A_at_Tb(0);
-				A_at_Tb_dummy(1) = A_at_Tb(1);
-				A_at_Tb_dummy(2) = A_at_Tb(2);
-
-				double T0 = -15 * 60; // last 15 minutes only, keep negative, [sec]
-				double stepT = 1; // [sec]
-				for (double t = T0 + stepT; t <= 0; t += stepT) {
-
-					{ // check propagation
-						int w = 15;
-						double x_norm = sqrt(
-								StateVector(0) * StateVector(0)
-										+ StateVector(1) * StateVector(1)
-										+ StateVector(2) * StateVector(2));
-
-						double v_norm = sqrt(
-								StateVector(3) * StateVector(3)
-										+ StateVector(4) * StateVector(4)
-										+ StateVector(5) * StateVector(5));
-
-						file_orb << setw(2) << SV << " " << fixed << setw(12) << setprecision(1)
-								<< t
-								<< setprecision(3) << setw(w) << StateVector(0)
-								<< setw(w) << StateVector(1) << setw(w)
-								<< StateVector(2) << setw(w) << StateVector(3)
-								<< setw(w) << StateVector(4) << setw(w)
-								<< StateVector(5) << setw(w) << x_norm
-								<< setw(w) << v_norm << endl;
-					}
-//
-//					StateVectorECI = ECEFtoECI(StateVector, EphemerisEpoch);
-//					A_at_Tb_ECI = ECEFtoECI(A_at_Tb, EphemerisEpoch);
-//					StateVectorECI = RungeKutta4order(StateVectorECI, t, stepT, A_at_Tb_ECI);
-//					StateVector = ECItoECEF(StateVectorECI, EphemerisEpoch);
-					StateVector = RungeKutta4order(StateVector, t, stepT, A_at_Tb);
-				}
-				LatestStatesAll.StateVector[SV] = StateVector;
-				LatestStatesAll.Atb[SV] = A_at_Tb_dummy;
-				LatestStatesAll.FrequencyNumber[SV] = glo_msg.nav.at(SV).FrequencyNumber;
-				LatestStatesAll.SVClockBias[SV] = glo_msg.nav.at(SV).SVClockBias;
-				LatestStatesAll.SVRelativeFrequencyBias[SV] = glo_msg.nav.at(SV).SVRelativeFrequencyBias;
-
-				sats.push_back(SV);
-			}
-		} else {
+			double stepT = 1;
+			double T0 = msgSV.second.epoch.toSeconds();
+			double Ttarget = TargetEpoch.toSeconds();
+//			if (EphemerisEpoch.hour == 23 && EphemerisEpoch.minutes >= 45) { // propagate only recent satellites
+//				T0 = -15 * 60; // last 15 minutes only, keep negative, [sec]
+//			}
 			int SV = msgSV.first;
-			cout << "Propagating SV " << SV << endl;
 			StateVector = getStaveVectorXV(msgSV.second);
-			A_at_Tb = getStaveVectorA(msgSV.second);
-			A_at_Tb_dummy(0) = A_at_Tb(0);
-			A_at_Tb_dummy(1) = A_at_Tb(1);
-			A_at_Tb_dummy(2) = A_at_Tb(2);
+			A_tb = getStaveVectorA(msgSV.second);
+			A_tb_dummy(0) = A_tb(0);
+			A_tb_dummy(1) = A_tb(1);
+			A_tb_dummy(2) = A_tb(2);
 
-			double T0 = 0;
-			double stepT = 1; // [sec]
-			for (double t = T0 + stepT; t <= TargetEpoch.toSeconds(); t += stepT) {
-//				StateVectorECI = ECEFtoECI(StateVector, EphemerisEpoch);
-//				A_at_Tb_ECI = ECEFtoECI(A_at_Tb, EphemerisEpoch);
-//				StateVectorECI = RungeKutta4order(StateVectorECI, t, stepT, A_at_Tb_ECI);
-//				StateVector = ECItoECEF(StateVectorECI, EphemerisEpoch);
-				StateVector = RungeKutta4order(StateVector, t, stepT, A_at_Tb);
+			for (double t = T0 + stepT; t <= Ttarget; t += stepT) {
 
-				{ // check propagation
-					int w = 15;
-					double x_norm = sqrt(
-							StateVector(0) * StateVector(0)
-									+ StateVector(1) * StateVector(1)
-									+ StateVector(2) * StateVector(2));
-
-					double v_norm = sqrt(
-							StateVector(3) * StateVector(3)
-									+ StateVector(4) * StateVector(4)
-									+ StateVector(5) * StateVector(5));
-
-					file_orb << setw(2) << SV << " " << fixed << setw(12) << setprecision(1)
-							<< t
-							<< setprecision(3) << setw(w) << StateVector(0)
-							<< setw(w) << StateVector(1) << setw(w)
-							<< StateVector(2) << setw(w) << StateVector(3)
-							<< setw(w) << StateVector(4) << setw(w)
-							<< StateVector(5) << setw(w) << x_norm
-							<< setw(w) << v_norm << endl;
-				}
-
+				StateVector = RungeKutta4order(StateVector, t, stepT, A_tb);
 			}
 			LatestStatesAll.StateVector[SV] = StateVector;
-			LatestStatesAll.Atb[SV] = A_at_Tb_dummy;
-			LatestStatesAll.FrequencyNumber[SV] = glo_msg.nav.at(SV).FrequencyNumber;
+			LatestStatesAll.Atb[SV] = A_tb_dummy;
+			LatestStatesAll.FrequencyNumber[SV] =
+					glo_msg.nav.at(SV).FrequencyNumber;
 			LatestStatesAll.SVClockBias[SV] = glo_msg.nav.at(SV).SVClockBias;
-			LatestStatesAll.SVRelativeFrequencyBias[SV] = glo_msg.nav.at(SV).SVRelativeFrequencyBias;
+			LatestStatesAll.SVRelativeFrequencyBias[SV] =
+					glo_msg.nav.at(SV).SVRelativeFrequencyBias;
 
 			sats.push_back(SV);
 		}
@@ -198,7 +124,8 @@ Orbits propagateOrbits(Orbits& InitOrbits, const Epoch& TargetEpoch,
 	for (int& SV : InitOrbits.sats) {
 		StateVectorUpd = InitOrbits.StateVector[SV];
 		for (double t = Tinit; t <= Tmax; t += stepT) {
-			StateVectorUpd = RungeKutta4order(StateVectorUpd, t, stepT, InitOrbits.Atb[SV]);
+			StateVectorUpd = RungeKutta4order(StateVectorUpd, t, stepT,
+					InitOrbits.Atb[SV]);
 		}
 		InitOrbits.StateVector[SV] = StateVectorUpd;
 	}
@@ -235,18 +162,18 @@ Matrix<double> ECItoECEF(const Matrix<double>& vECI, const Epoch& epoch_UTC) {
 	int nRows = vECI.getRows();
 	Matrix<double> vECEF(nRows, 1, 0);
 
-	vECEF(0) =  vECI(0) * cos(Ang) + vECI(1) * sin(Ang);
+	vECEF(0) = vECI(0) * cos(Ang) + vECI(1) * sin(Ang);
 	vECEF(1) = -vECI(0) * sin(Ang) + vECI(1) * cos(Ang);
-	vECEF(2) =  vECI(2);
+	vECEF(2) = vECI(2);
 
 	if (nRows == 6) {
 		double vx = vECI(3) + We * vECI(1);
 		double vy = vECI(4) - We * vECI(0);
 		double vz = vECI(5);
 
-		vECEF(3) =  vx * cos(Ang) + vy * sin(Ang);
+		vECEF(3) = vx * cos(Ang) + vy * sin(Ang);
 		vECEF(4) = -vx * sin(Ang) + vy * cos(Ang);
-		vECEF(5) =  vz;
+		vECEF(5) = vz;
 	}
 
 	return vECEF;

@@ -11,7 +11,7 @@
 #include "Observations.h"
 #include "OrbProp.h"
 
-Matrix<double> solverLS(const Observations& obs, const Orbits& orbs, const Matrix<double>& RecXYZapriori);
+Matrix<double> solverLS(const Observations& obsAll, const Orbits& orbsAll, const Matrix<double>& RecXYZapriori);
 
 void printXYZT(const Matrix<double>& rec_est);
 

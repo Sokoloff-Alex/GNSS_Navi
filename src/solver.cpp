@@ -15,8 +15,14 @@
 
 using namespace std;
 
-Matrix<double> solverLS(const Observations& obs, const Orbits& orbs,
+Matrix<double> solverLS(const Observations& obsAll, const Orbits& orbsAll,
 		const Matrix<double>& RecXYZapriori) {
+
+	set<int> commonSV = intersect(obsAll, orbsAll, "R");
+	Observations obs = select(obsAll, commonSV, "R");
+	Orbits orbs = select(orbsAll, commonSV);
+
+
 	vector<int> sats = orbs.sats;
 	int numberOfSats = sats.size();
 
@@ -82,7 +88,7 @@ Matrix<double> solverLS(const Observations& obs, const Orbits& orbs,
 	if (norm(RecXYZ) == 0) {
 		maxIter = 5;
 	}
-	for (int iteration = 0; iteration < 5; ++iteration) {
+	for (int iteration = 0; iteration < maxIter; ++iteration) {
 		for (int iSat = 0; iSat < numberOfSats; ++iSat) {
 
 			Xs(0) = orbs_cor.StateVector.at(sats[iSat])(0);
@@ -110,8 +116,6 @@ Matrix<double> solverLS(const Observations& obs, const Orbits& orbs,
 			double GammaN = orbs_cor.SVRelativeFrequencyBias.at(sats[iSat]);
 			double TauC = orbs_cor.SystemCorrectiontTme;
 			double tSV = orbs_cor.epoch.toSeconds();
-			double SVtoUT = (TauN - GammaN * tSV + TauC);
-			cout << "dts * c = " << fixed << setw(15) 	<< (TauN - GammaN * tSV + TauC) * c << endl;
 
 			// move known values to lhs
 			PRangeTilde(iSat) = Range(iSat) + (e_sr.transpose() * Xs)(0, 0)
@@ -125,10 +129,10 @@ Matrix<double> solverLS(const Observations& obs, const Orbits& orbs,
 		RecXYZ(1) = rec_est(1);
 		RecXYZ(2) = rec_est(2);
 		printXYZT(rec_est);
-		Matrix<double> Resuduals(numberOfSats,1,0);
-		Resuduals = PRangeTilde - A * rec_est;
-		cout << "Residuals" << endl;
-		Resuduals.print();
+//		Matrix<double> Resuduals(numberOfSats,1,0);
+//		Resuduals = PRangeTilde - A * rec_est;
+//		cout << "Residuals" << endl;
+//		Resuduals.print();
 	}
 	return rec_est;
 }
