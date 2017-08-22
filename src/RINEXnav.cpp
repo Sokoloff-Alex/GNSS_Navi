@@ -14,8 +14,7 @@
 #include "navmsg.h"
 using namespace std;
 
-glonass_nav_msg& getGLONASSnavmsgBlock(ifstream& textfile,
-		glonass_nav_msg& glo_nav_msg) {
+glonass_nav_msg& getGLONASSnavmsgBlock(ifstream& textfile, glonass_nav_msg& glo_nav_msg) {
 	string str_line;
 	glonass_nav_data_block glo_nav_data;
 
@@ -23,19 +22,20 @@ glonass_nav_msg& getGLONASSnavmsgBlock(ifstream& textfile,
 	int satNumber = stoi(str_line.substr(1, 2));
 	glo_nav_msg.sats.push_back(satNumber);
 
-	Epoch epoch;
-	epoch.year = stoi(str_line.substr(4, 4));
-	epoch.month = stoi(str_line.substr(9, 2));
-	epoch.day = stoi(str_line.substr(12, 2));
-	epoch.hour = stoi(str_line.substr(15, 2));
-	epoch.minutes = stoi(str_line.substr(18, 2));
-	epoch.seconds = stod(str_line.substr(21, 2));
-
-	glo_nav_data.epoch = epoch;
+	glo_nav_data.epoch = parseNavEpoch(str_line);
 	glo_nav_data.SVClockBias = stoDouble(str_line.substr(23, 19));
 	glo_nav_data.SVRelativeFrequencyBias = stoDouble(str_line.substr(42, 19));
 	glo_nav_data.MessageFrameTime = stoDouble(str_line.substr(61, 19));
 
+	glo_nav_data = getNavBlock(textfile, glo_nav_data);
+
+	glo_nav_msg.nav[satNumber] = glo_nav_data;
+
+	return glo_nav_msg;
+}
+
+glonass_nav_data_block& getNavBlock(ifstream& textfile, glonass_nav_data_block& glo_nav_data) {
+	string str_line;
 	// convert [km] [km/s] [km/s^2] to [m], [m/s], [m/s^2]
 	getline(textfile, str_line);
 	glo_nav_data.x = stoDouble(str_line.substr(4, 19)) * 1000;
@@ -55,9 +55,7 @@ glonass_nav_msg& getGLONASSnavmsgBlock(ifstream& textfile,
 	glo_nav_data.az = stoDouble(str_line.substr(42, 19)) * 1000;
 	glo_nav_data.InformationAge = stoDouble(str_line.substr(61, 19));
 
-	glo_nav_msg.nav[satNumber] = glo_nav_data;
-
-	return glo_nav_msg;
+	return glo_nav_data;
 }
 
 glonass_nav_msg parse_GLONASS_Nav(ifstream& textfile) {
@@ -72,7 +70,8 @@ glonass_nav_msg parse_GLONASS_Nav(ifstream& textfile) {
 		}
 	}
 
-	glo_nav_msg.header.SystemCorrectiontTme = stoDouble(str_line.substr(5, 17), "D17.10");
+	glo_nav_msg.header.SystemCorrectiontTme = stoDouble(str_line.substr(5, 17),
+			"D17.10");
 	getline(textfile, str_line);
 	glo_nav_msg.header.LeapSeconds = stoi(str_line.substr(0, 6));
 
@@ -109,22 +108,62 @@ glonass_nav_msg parseRINEX_Nav(ifstream& nav_file_stream) {
 	}
 }
 
+glonass_nav_msg updateMSGfromRINEX(ifstream& nav_file_stream,
+		glonass_nav_msg& glo_msg) {
+
+	Epoch currentEpoch = glo_msg.nav[1].epoch;
+	for (int sv = 2; sv <= 24; ++sv) {
+		if (currentEpoch < glo_msg.nav[sv].epoch) {
+			currentEpoch = glo_msg.nav[sv].epoch;
+		}
+	}
+
+	string str_line;
+	glonass_nav_data_block glo_nav_data;
+
+//	update from First Entry
+	getline(nav_file_stream, str_line);
+	Epoch new_epoch1 = parseNavEpoch(str_line);
+	int sv = stoi(str_line.substr(1, 2));
+	glo_nav_data.epoch = new_epoch1;
+	glo_nav_data.SVClockBias = stoDouble(str_line.substr(23, 19));
+	glo_nav_data.SVRelativeFrequencyBias = stoDouble(str_line.substr(42, 19));
+	glo_nav_data.MessageFrameTime = stoDouble(str_line.substr(61, 19));
+	glo_nav_data = getNavBlock(nav_file_stream, glo_nav_data);
+
+
+
+	return glo_msg;
+}
+
 void printGLOnavmsg(const glonass_nav_msg& glo_msg) {
 	cout << glo_msg.system << endl;
 //	cout << "LeapSeconds " <<  glo_msg.header.LeapSeconds << endl;
 //	cout << "SystemCorrectiontTme " <<  glo_msg.header.SystemCorrectiontTme << endl;
 	for (auto& navBlock : glo_msg.nav) {
 		int SV = navBlock.first;
-		cout << "SV " << setw(2) << SV << " : xyz : " << fixed << setprecision(6) << setw(20)
-				<< navBlock.second.x << " " << setw(20)
-				<< navBlock.second.y << " " << setw(20)
-				<< navBlock.second.z << "   [m] " << navBlock.second.epoch.minutes << endl;
+		cout << "SV " << setw(2) << SV << " : xyz : " << fixed
+				<< setprecision(6) << setw(20) << navBlock.second.x << " "
+				<< setw(20) << navBlock.second.y << " " << setw(20)
+				<< navBlock.second.z << "   [m] "
+				<< navBlock.second.epoch.minutes << endl;
 	}
+}
+
+Epoch parseNavEpoch(const string& str_line) {
+	Epoch epoch;
+	epoch.year = stoi(str_line.substr(4, 4));
+	epoch.month = stoi(str_line.substr(9, 2));
+	epoch.day = stoi(str_line.substr(12, 2));
+	epoch.hour = stoi(str_line.substr(15, 2));
+	epoch.minutes = stoi(str_line.substr(18, 2));
+	epoch.seconds = stod(str_line.substr(21, 2));
+	return epoch;
 }
 
 double stoDouble(const string& strValue, const string& strFormat) {
 //	 example: D17.10	" 1.5832483768D-08"
-	int LenTotal = stoi(strFormat.substr(1,2));
+	int LenTotal = stoi(strFormat.substr(1, 2));
 	int LenValue = LenTotal - 4;
 	double Value = stod(strValue.substr(0, LenValue));
 	double Power = stod(strValue.substr(LenValue + 1, 3));
@@ -139,5 +178,4 @@ double stoDouble(const string& strValue) {
 	Value *= pow(10, Power);
 	return Value;
 }
-
 

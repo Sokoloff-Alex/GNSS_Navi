@@ -33,6 +33,7 @@ public:
 //	Epoch(const int& myYear, const int& myMonth, const int& myDay, const int& myHour, const int& myMinute, const double& mySecond);
 	double toSeconds() const;
 	Epoch addSec(const double& sec);
+	bool operator<(const Epoch& rhs);
 };
 
 class Orbits {

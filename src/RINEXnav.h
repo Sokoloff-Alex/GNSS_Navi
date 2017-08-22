@@ -23,7 +23,13 @@ glonass_nav_msg parseRINEX_NavEpoch(ifstream& nav_textfile);
 
 glonass_nav_msg& getGLONASSnavmsgBlock(ifstream& textfile, glonass_nav_msg& glo_nav_msg);
 
+glonass_nav_data_block& getNavBlock(ifstream& textfile, glonass_nav_data_block& glo_nav_data);
+
+glonass_nav_msg updateMSGfromRINEX(ifstream& nav_file_stream, glonass_nav_msg& glo_msg);
+
 void printGLOnavmsg(const glonass_nav_msg& glo_msg);
+
+Epoch parseNavEpoch(const string& str_line);
 
 double stoDouble(const string& strValue, const string& strFormat);
 

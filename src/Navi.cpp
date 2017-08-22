@@ -28,7 +28,7 @@ using namespace std;
 int main() {
 
 	string obs_file_path =
-			"D:/Dev/GNSS/obs/2017/144/WTZZ00DEU_S_20171440000_15M_01S_MO.00o";
+			"D:/Dev/GNSS/obs/2017/144/WTZR00DEU_R_20171440000_01D_30S_MO.00o";
 	string RN_file_path =
 			"D:/Dev/GNSS/obs/2017/144/WTZ200DEU_R_20171440000_01D_RN.rnx/WTZ200DEU_R_20171440000_01D_RN.RNX";
 	string out_file_path = "D:/Dev/GNSS/obs/xyzt.txt";
@@ -52,8 +52,15 @@ int main() {
 		RecXYZ(1) = rec_est(1);
 		RecXYZ(2) = rec_est(2);
 
-		for (int sec = 0; sec < 30; ++sec) {
-			Observations obs = parseRINEX_Epoch(obs_file);
+
+
+		for (int sec = 0; sec < 90; sec+=30) {
+
+			obs = parseRINEX_Epoch(obs_file);
+			Epoch currEpoch = obs.epoch;
+			if (currEpoch.seconds == 0 && (currEpoch.minutes == 15 || currEpoch.minutes == 45)) {
+//				glo_msg = parseRINEX_Nav(RN_file);
+			}
 			orbs = propagateOrbits(orbs, obs.epoch, 1);
 			rec_est = solverLS(obs, orbs, RecXYZ);
 			RecXYZ(0) = rec_est(0);
