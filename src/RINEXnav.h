@@ -21,11 +21,13 @@ glonass_nav_msg parseRINEX_Nav(ifstream& nav_textfile);
 // start with for GLONASS (easiest)
 glonass_nav_msg parseRINEX_NavEpoch(ifstream& nav_textfile);
 
-glonass_nav_msg& getGLONASSnavmsgBlock(ifstream& textfile, glonass_nav_msg& glo_nav_msg);
+void parseGLONASSnavmsgBlock(ifstream& textfile, glonass_nav_msg& glo_nav_msg);
 
-glonass_nav_data_block& getNavBlock(ifstream& textfile, glonass_nav_data_block& glo_nav_data);
+void fillNavBlock_head(const string& firstLineOfBlock, glonass_nav_data_block& glo_nav_data);
 
-glonass_nav_msg updateMSGfromRINEX(ifstream& nav_file_stream, glonass_nav_msg& glo_msg);
+void fillNavBlock_tail(ifstream& textfile, glonass_nav_data_block& glo_nav_data);
+
+void updateMSGfromRINEX(ifstream& nav_file_stream, glonass_nav_msg& glo_msg);
 
 void printGLOnavmsg(const glonass_nav_msg& glo_msg);
 

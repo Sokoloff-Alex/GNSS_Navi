@@ -128,7 +128,8 @@ Matrix<double> solverLS(const Observations& obsAll, const Orbits& orbsAll,
 		RecXYZ(0) = rec_est(0);
 		RecXYZ(1) = rec_est(1);
 		RecXYZ(2) = rec_est(2);
-		printXYZT(rec_est);
+//		printXYZT(rec_est);
+//		cout << setw(5) << setprecision(0) << numberOfSats << endl;
 //		Matrix<double> Resuduals(numberOfSats,1,0);
 //		Resuduals = PRangeTilde - A * rec_est;
 //		cout << "Residuals" << endl;
@@ -142,6 +143,6 @@ void printXYZT(const Matrix<double>& rec_est) {
 	int w = 16;
 	cout << fixed << setprecision(3) << setw(w) << rec_est(0) << " " << setw(w)
 			<< rec_est(1) << " " << setw(w) << rec_est(2) << " " << setw(w) << setprecision(9)
-			<< rec_est(3) / c << endl;
+			<< rec_est(3) / c;
 }
 

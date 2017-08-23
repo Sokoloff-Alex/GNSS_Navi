@@ -14,27 +14,28 @@
 #include "navmsg.h"
 using namespace std;
 
-glonass_nav_msg& getGLONASSnavmsgBlock(ifstream& textfile, glonass_nav_msg& glo_nav_msg) {
+void parseGLONASSnavmsgBlock(ifstream& textfile, glonass_nav_msg& glo_nav_msg) {
 	string str_line;
-	glonass_nav_data_block glo_nav_data;
-
 	getline(textfile, str_line);
-	int satNumber = stoi(str_line.substr(1, 2));
-	glo_nav_msg.sats.push_back(satNumber);
+	glonass_nav_data_block glo_nav_data;
+	fillNavBlock_head(str_line, glo_nav_data);
+	fillNavBlock_tail(textfile, glo_nav_data);
 
-	glo_nav_data.epoch = parseNavEpoch(str_line);
-	glo_nav_data.SVClockBias = stoDouble(str_line.substr(23, 19));
-	glo_nav_data.SVRelativeFrequencyBias = stoDouble(str_line.substr(42, 19));
-	glo_nav_data.MessageFrameTime = stoDouble(str_line.substr(61, 19));
-
-	glo_nav_data = getNavBlock(textfile, glo_nav_data);
-
-	glo_nav_msg.nav[satNumber] = glo_nav_data;
-
-	return glo_nav_msg;
+	glo_nav_msg.nav[glo_nav_data.slotNumber] = glo_nav_data;
+	glo_nav_msg.sats.push_back(glo_nav_data.slotNumber);
 }
 
-glonass_nav_data_block& getNavBlock(ifstream& textfile, glonass_nav_data_block& glo_nav_data) {
+void fillNavBlock_head(const string& firstLineOfBlock, glonass_nav_data_block& glo_nav_data) {
+
+	glo_nav_data.slotNumber = stoi(firstLineOfBlock.substr(1, 2));
+	glo_nav_data.epoch = parseNavEpoch(firstLineOfBlock);
+	glo_nav_data.SVClockBias = stoDouble(firstLineOfBlock.substr(23, 19));
+	glo_nav_data.SVRelativeFrequencyBias = stoDouble(firstLineOfBlock.substr(42, 19));
+	glo_nav_data.MessageFrameTime = stoDouble(firstLineOfBlock.substr(61, 19));
+}
+
+void fillNavBlock_tail(ifstream& textfile, glonass_nav_data_block& glo_nav_data) {
+
 	string str_line;
 	// convert [km] [km/s] [km/s^2] to [m], [m/s], [m/s^2]
 	getline(textfile, str_line);
@@ -54,8 +55,6 @@ glonass_nav_data_block& getNavBlock(ifstream& textfile, glonass_nav_data_block& 
 	glo_nav_data.vz = stoDouble(str_line.substr(23, 19)) * 1000;
 	glo_nav_data.az = stoDouble(str_line.substr(42, 19)) * 1000;
 	glo_nav_data.InformationAge = stoDouble(str_line.substr(61, 19));
-
-	return glo_nav_data;
 }
 
 glonass_nav_msg parse_GLONASS_Nav(ifstream& textfile) {
@@ -83,7 +82,7 @@ glonass_nav_msg parse_GLONASS_Nav(ifstream& textfile) {
 	}
 
 	for (int i = 0; i < 24; ++i) {
-		glo_nav_msg = getGLONASSnavmsgBlock(textfile, glo_nav_msg);
+		parseGLONASSnavmsgBlock(textfile, glo_nav_msg);
 	}
 
 	sort(glo_nav_msg.sats.begin(), glo_nav_msg.sats.end());
@@ -101,6 +100,8 @@ glonass_nav_msg parseRINEX_Nav(ifstream& nav_file_stream) {
 	glonass_nav_msg glo_nav_msg;
 	if (str_line.substr(40, 1) == "R") {
 		glo_nav_msg = parse_GLONASS_Nav(nav_file_stream);
+		getline(nav_file_stream, str_line);
+		glo_nav_msg.stringBuffer = str_line;
 		return glo_nav_msg;
 	} else {
 		cout << "Error, other systems are not implemented" << endl;
@@ -108,32 +109,30 @@ glonass_nav_msg parseRINEX_Nav(ifstream& nav_file_stream) {
 	}
 }
 
-glonass_nav_msg updateMSGfromRINEX(ifstream& nav_file_stream,
-		glonass_nav_msg& glo_msg) {
+void updateMSGfromRINEX(ifstream& nav_file_stream, glonass_nav_msg& glo_msg) {
 
-	Epoch currentEpoch = glo_msg.nav[1].epoch;
-	for (int sv = 2; sv <= 24; ++sv) {
-		if (currentEpoch < glo_msg.nav[sv].epoch) {
-			currentEpoch = glo_msg.nav[sv].epoch;
-		}
-	}
-
-	string str_line;
 	glonass_nav_data_block glo_nav_data;
 
-//	update from First Entry
+//	update from First incoming block
+	string str_line = glo_msg.stringBuffer;
+	Epoch epoch_block_first = parseNavEpoch(str_line);
+	fillNavBlock_head(str_line, glo_nav_data);
+	fillNavBlock_tail(nav_file_stream, glo_nav_data);
+	glo_msg.nav[glo_nav_data.slotNumber] = glo_nav_data;
+
+//	try to update from next incoming block
 	getline(nav_file_stream, str_line);
-	Epoch new_epoch1 = parseNavEpoch(str_line);
-	int sv = stoi(str_line.substr(1, 2));
-	glo_nav_data.epoch = new_epoch1;
-	glo_nav_data.SVClockBias = stoDouble(str_line.substr(23, 19));
-	glo_nav_data.SVRelativeFrequencyBias = stoDouble(str_line.substr(42, 19));
-	glo_nav_data.MessageFrameTime = stoDouble(str_line.substr(61, 19));
-	glo_nav_data = getNavBlock(nav_file_stream, glo_nav_data);
+	Epoch epoch_block_next = parseNavEpoch(str_line);
+	while (epoch_block_first == epoch_block_next) {
+		fillNavBlock_head(str_line, glo_nav_data);
+		fillNavBlock_tail(nav_file_stream, glo_nav_data);
+		glo_msg.nav[glo_nav_data.slotNumber] = glo_nav_data;
 
-
-
-	return glo_msg;
+		// if ok, try another
+		getline(nav_file_stream, str_line);
+		epoch_block_next = parseNavEpoch(str_line);
+	}
+	glo_msg.stringBuffer = str_line;
 }
 
 void printGLOnavmsg(const glonass_nav_msg& glo_msg) {

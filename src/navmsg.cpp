@@ -55,6 +55,22 @@ bool Epoch::operator<(const Epoch& rhs) {
 	}
 }
 
+bool Epoch::operator==(const Epoch& rhs) {
+	if (this->year == rhs.year) {
+		if (this->month == rhs.month) {
+			if (this->day == rhs.day) {
+				return (this->toSeconds() == rhs.toSeconds());
+			} else {
+				return this->day == rhs.day;
+			}
+		} else {
+			return this->month == rhs.month;
+		}
+	} else {
+		return this->year == rhs.year;
+	}
+}
+
 Matrix<double> getStaveVectorXV(const glonass_nav_data_block& msgSV) {
 
 	Matrix<double> StateVector(6, 1, 0);

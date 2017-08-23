@@ -34,6 +34,7 @@ public:
 	double toSeconds() const;
 	Epoch addSec(const double& sec);
 	bool operator<(const Epoch& rhs);
+	bool operator==(const Epoch& rhs);
 };
 
 class Orbits {
@@ -74,6 +75,7 @@ struct glonass_nav_msg {
 	glonass_nav_header header;
 	map<int, glonass_nav_data_block> nav;
 	vector<int> sats;
+	string stringBuffer;
 };
 
 Matrix<double> getStaveVectorXV(const glonass_nav_data_block& msgSV);
