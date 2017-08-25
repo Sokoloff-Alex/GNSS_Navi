@@ -40,8 +40,8 @@ public:
 class Orbits {
 public:
 	Epoch epoch;
-	map<int, Matrix<double> > StateVector;
-	map<int, Matrix<double> > Atb;
+	map<int, Matrix > StateVector;
+	map<int, Matrix > Atb;
 	map<int, double> SVClockBias;
 	map<int, double> SVRelativeFrequencyBias;
 	map<int, int> FrequencyNumber;
@@ -78,9 +78,12 @@ struct glonass_nav_msg {
 	string stringBuffer;
 };
 
-Matrix<double> getStaveVectorXV(const glonass_nav_data_block& msgSV);
+Matrix getStaveVectorXV(const glonass_nav_data_block& msgSV);
 
-Matrix<double> getStaveVectorA(const glonass_nav_data_block& msgSV);
+Matrix getStaveVectorX(const glonass_nav_data_block& msgSV);
+Matrix getStaveVectorV(const glonass_nav_data_block& msgSV);
+Matrix getStaveVectorA(const glonass_nav_data_block& msgSV);
+
 
 Orbits select(const Orbits& orbs, const set<int>& sats);
 

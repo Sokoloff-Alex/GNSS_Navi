@@ -9,64 +9,66 @@
 #define MATRIX_H_
 
 #include <vector>
+
 using namespace std;
 
-template<typename T>
 class Matrix {
 private:
-	vector<vector<T> > mat;
+	vector<vector<double> > mat;
 	int rows;
 	int cols;
 public:
-	Matrix(int myRows, int myCols, const T& myInitial);
+	Matrix(int myRows, int myCols, const double& myInitial);
 	Matrix();
 
-	Matrix(const Matrix<T>& rhs);
+	Matrix(const Matrix& rhs);
 	virtual ~Matrix();
 
 	// Matrix operations
-	Matrix<T> transpose();
-	Matrix<T>& inverse();
-	Matrix<T> minor(const int row, const int col);
+	Matrix transpose();
+	Matrix& inverse();
+	Matrix minor(const int row, const int col);
 	double determinant();
 
-	bool sameDimentions(const Matrix<T>& lhs, const Matrix<T>& rhs);
+	bool sameDimentions(const Matrix& lhs, const Matrix& rhs);
+	bool sameDimentions(const Matrix& lhs, const Matrix& rhs) const;
 
-	Matrix<T>& operator=(const Matrix<T>& rhs);
+	Matrix& operator=(const Matrix& rhs);
 
-	Matrix<T> operator+(const Matrix<T>& rhs);
-	Matrix<T>& operator+=(const Matrix<T>& rhs);
-	Matrix<T> operator-(const Matrix<T>& rhs);
-	Matrix<T>& operator-=(const Matrix<T>& rhs);
-	Matrix<T> operator*(const Matrix<T>& rhs);
-	Matrix<T>& operator*=(const Matrix<T>& rhs);
+	Matrix operator+(const Matrix& rhs);
+	Matrix& operator+=(const Matrix& rhs);
+	Matrix operator-(const Matrix& rhs);
+	Matrix operator-(const Matrix& rhs) const;
+	Matrix& operator-=(const Matrix& rhs);
+	Matrix operator*(const Matrix& rhs);
+	Matrix& operator*=(const Matrix& rhs);
 
 	// matrix/scalar operations
-	Matrix<T> operator+(const T& rhs);
-	Matrix<T> operator-(const T& rhs);
-	Matrix<T> operator*(const T& rhs);
-	Matrix<T> operator/(const T& rhs);
+	Matrix operator+(const double& rhs);
+	Matrix operator-(const double& rhs);
+	Matrix operator*(const double& rhs);
+	Matrix operator/(const double& rhs);
 
-	Matrix<T>& operator+=(const T& rhs);
-	Matrix<T>& operator-=(const T& rhs);
-	Matrix<T>& operator*=(const T& rhs);
-	Matrix<T>& operator/=(const T& rhs);
+	Matrix& operator+=(const double& rhs);
+	Matrix& operator-=(const double& rhs);
+	Matrix& operator*=(const double& rhs);
+	Matrix& operator/=(const double& rhs);
 
 	//Matrix/vector operations
-	vector<T> operator*(const vector<T>& rhs);
-	vector<T> diag();
+	vector<double> operator*(const vector<double>& rhs);
+	vector<double> diag();
 
 	// Access individual elements
-	T& operator()(const int& row, const int& col);
-	T& operator()(const int& row);
-	const T& operator()(const int& row, const int& col) const; // read/write
-	const T& operator()(const int& row) const; // read/write
+	double& operator()(const int& row, const int& col);
+	double& operator()(const int& row);
+	const double& operator()(const int& row, const int& col) const; // read/write
+	const double& operator()(const int& row) const; // read/write
 
 	bool hasElement(const int& row, const int& col);
-	T& at(const int& row, const int& col);
-	const T& at(const int& row, const int& col) const;
+	double& at(const int& row, const int& col);
+	const double& at(const int& row, const int& col) const;
 
-	Matrix<T>& fill(const T& myValue);
+	Matrix& fill(const double& myValue);
 	void print() const;
 
 	// Get dimensions of matrix
@@ -74,31 +76,24 @@ public:
 	int getCols() const;
 
 private:
-	Matrix<T>& fillCheckBoard(const T& myValue1, const T& myValue2);
+	Matrix& fillCheckBoard(const double& myValue1, const double& myValue2);
 };
 
 // extra functions
-template<typename T>
-Matrix<T> identity(const int& rows, const int& cols);
+Matrix identity(const int& rows, const int& cols);
 
-//template<typename T>
-//Matrix<T> R1(const double& angleRadians);
+void printVector(const vector<double>& v);
 
-template<typename T>
-void printVector(const vector<T>& v);
+Matrix cross(const Matrix& u, const Matrix& v);
 
-template<typename T>
-Matrix<double> cross(const Matrix<T>& u, const Matrix<T>& v);
+double norm(const Matrix& r);
 
-template<typename T>
-double norm(const Matrix<T>& r);
+double dot(const Matrix& v1, const Matrix& v2);
 
-template<typename T>
-double dot(const Matrix<T>& v1, const Matrix<T>& v2);
+Matrix R3(const double& angleRadians);
 
-template<typename T>
-Matrix<double> R3(const double& angleRadians);
+Matrix R2(const double& angleRadians);
 
-#include "Matrix.cpp" // Necessary for template classes
+Matrix R1(const double& angleRadians);
 
 #endif /* MATRIX_H_ */

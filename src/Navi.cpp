@@ -18,9 +18,9 @@
 #include "Matrix.h"
 #include "RINEX.h"
 #include "RINEXnav.h"
-#include "OrbProp.h"
 #include "navmsg.h"
 #include "Observations.h"
+#include "OrbProp.h"
 #include "solver.h"
 
 using namespace std;
@@ -37,7 +37,7 @@ int main() {
 
 	ofstream out_file(out_file_path);
 
-	Matrix<double> RecXYZ(3, 1, 0.0);
+	Matrix RecXYZ(3, 1, 0.0);
 	RecXYZ(0) = 4075580.848;
 	RecXYZ(1) = 931853.570;
 	RecXYZ(2) = 4801567.925;
@@ -51,7 +51,7 @@ int main() {
 		glonass_nav_msg glo_msg = parseRINEX_Nav(RN_file);
 
 		Orbits orbs = propagateOrbits(glo_msg, obs.epoch);
-		Matrix<double> rec_est = solverLS(obs, orbs, RecXYZ);
+		Matrix rec_est = solverLS(obs, orbs, RecXYZ);
 		RecXYZ(0) = rec_est(0);
 		RecXYZ(1) = rec_est(1);
 		RecXYZ(2) = rec_est(2);
@@ -62,13 +62,18 @@ int main() {
 				<< setprecision(9) << rec_est(3) / c << setw(12)
 				<< setprecision(1) << currEpoch.toSeconds() << endl;
 
-		for (int sec = 0; sec <= 60 * 60 * 24; sec += 30) {
+		Matrix AzElevStack(24,2,0);
+		AzElevStack = MSGtoTopo(glo_msg, RecXYZ);
+		AzElevStack.print();
+		for (int sec = 0; sec <= 30; sec += 30) {
 
 			obs = parseRINEX_Epoch(obs_file);
 			currEpoch = obs.epoch;
 			if (currEpoch.seconds == 0
 					&& (currEpoch.minutes == 15 || currEpoch.minutes == 45)) {
 				updateMSGfromRINEX(RN_file, glo_msg);
+				AzElevStack = MSGtoTopo(glo_msg, RecXYZ);
+				AzElevStack.print();
 			}
 			orbs = propagateOrbits(orbs, obs.epoch, 1);
 			rec_est = solverLS(obs, orbs, RecXYZ);

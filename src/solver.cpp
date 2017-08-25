@@ -8,15 +8,15 @@
 #include <math.h>
 #include <iostream>
 #include <iomanip>
-#include "solver.h"
 #include "Observations.h"
 #include "OrbProp.h"
 #include "Matrix.h"
+#include "solver.h"
 
 using namespace std;
 
-Matrix<double> solverLS(const Observations& obsAll, const Orbits& orbsAll,
-		const Matrix<double>& RecXYZapriori) {
+Matrix solverLS(const Observations& obsAll, const Orbits& orbsAll,
+		const Matrix& RecXYZapriori) {
 
 	set<int> commonSV = intersect(obsAll, orbsAll, "R");
 	Observations obs = select(obsAll, commonSV, "R");
@@ -27,19 +27,19 @@ Matrix<double> solverLS(const Observations& obsAll, const Orbits& orbsAll,
 	int numberOfSats = sats.size();
 
 	if (numberOfSats < 4) {
-		return Matrix<double>(4, 1, 0.0);
+		return Matrix(4, 1, 0.0);
 	}
 	// constants, all units in SI !!!
 	const double c = 299792458; // [m/s]
 	const double Omega_E_rate = 0.000072921151467; //[rad/s]
 	const double Tzpd = 2.3; // [m]
 
-	Matrix<double> RecXYZ(3, 1, 0);
+	Matrix RecXYZ(3, 1, 0);
 	RecXYZ = RecXYZapriori;
 
-	Matrix<double> Range = getRanges(obs);
-	Matrix<double> Xs(3, 1, 0);
-	Matrix<double> Vs(3, 1, 0);
+	Matrix Range = getRanges(obs);
+	Matrix Xs(3, 1, 0);
+	Matrix Vs(3, 1, 0);
 
 	Orbits orbs_cor = orbs;
 
@@ -69,7 +69,7 @@ Matrix<double> solverLS(const Observations& obsAll, const Orbits& orbsAll,
 		double tSV = orbs_cor.epoch.toSeconds();
 
 		double SVtoUT = (TauN - GammaN * tSV + TauC);
-		Matrix<double> dXs_dts(3, 1, 0);
+		Matrix dXs_dts(3, 1, 0);
 		dXs_dts = Vs * SVtoUT;
 		Xs -= dXs_dts;
 
@@ -79,10 +79,10 @@ Matrix<double> solverLS(const Observations& obsAll, const Orbits& orbsAll,
 	}
 
 	// dummies
-	Matrix<double> PRangeTilde(numberOfSats, 1, 0.0);
-	Matrix<double> A(numberOfSats, 4, 1);  //designMatrix
-	Matrix<double> Residuals(numberOfSats, 1, 0);
-	Matrix<double> rec_est(4, 1, 0);
+	Matrix PRangeTilde(numberOfSats, 1, 0.0);
+	Matrix A(numberOfSats, 4, 1);  //designMatrix
+	Matrix Residuals(numberOfSats, 1, 0);
+	Matrix rec_est(4, 1, 0);
 
 	int maxIter = 1;
 	if (norm(RecXYZ) == 0) {
@@ -96,13 +96,13 @@ Matrix<double> solverLS(const Observations& obsAll, const Orbits& orbsAll,
 			Xs(2) = orbs_cor.StateVector.at(sats[iSat])(2);
 
 			// unit vectors
-			Matrix<double> e_sr = (RecXYZ - Xs) / norm(Xs - RecXYZ);
+			Matrix e_sr = (RecXYZ - Xs) / norm(Xs - RecXYZ);
 			A(iSat, 0) = e_sr(0);
 			A(iSat, 1) = e_sr(1);
 			A(iSat, 2) = e_sr(2);
 
 			// Troposphere correction
-			Matrix<double> e_rec(3, 1, 0);
+			Matrix e_rec(3, 1, 0);
 			double cos_z = 0;
 			double T = Tzpd;
 			if (norm(RecXYZ) != 0) {
@@ -128,9 +128,10 @@ Matrix<double> solverLS(const Observations& obsAll, const Orbits& orbsAll,
 		RecXYZ(0) = rec_est(0);
 		RecXYZ(1) = rec_est(1);
 		RecXYZ(2) = rec_est(2);
-//		printXYZT(rec_est);
+		printXYZT(rec_est);
+		cout << endl;
 //		cout << setw(5) << setprecision(0) << numberOfSats << endl;
-//		Matrix<double> Resuduals(numberOfSats,1,0);
+//		Matrix Resuduals(numberOfSats,1,0);
 //		Resuduals = PRangeTilde - A * rec_est;
 //		cout << "Residuals" << endl;
 //		Resuduals.print();
@@ -138,7 +139,7 @@ Matrix<double> solverLS(const Observations& obsAll, const Orbits& orbsAll,
 	return rec_est;
 }
 
-void printXYZT(const Matrix<double>& rec_est) {
+void printXYZT(const Matrix& rec_est) {
 	const double c = 299792458; // [m/s]
 	int w = 16;
 	cout << fixed << setprecision(3) << setw(w) << rec_est(0) << " " << setw(w)

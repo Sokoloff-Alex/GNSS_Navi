@@ -6,6 +6,7 @@
  */
 
 #include <set>
+#include <math.h>
 #include "navmsg.h"
 
 //Epoch::Epoch(const int& myYear = 1970, const int& myMonth = 1,
@@ -71,25 +72,43 @@ bool Epoch::operator==(const Epoch& rhs) {
 	}
 }
 
-Matrix<double> getStaveVectorXV(const glonass_nav_data_block& msgSV) {
+Matrix getStaveVectorXV(const glonass_nav_data_block& msgSV) {
 
-	Matrix<double> StateVector(6, 1, 0);
-	StateVector(0) = msgSV.x;
-	StateVector(1) = msgSV.y;
-	StateVector(2) = msgSV.z;
-	StateVector(3) = msgSV.vx;
-	StateVector(4) = msgSV.vy;
-	StateVector(5) = msgSV.vz;
-	return StateVector;
+	Matrix StateVectorXV(6, 1, 0);
+	StateVectorXV(0) = msgSV.x;
+	StateVectorXV(1) = msgSV.y;
+	StateVectorXV(2) = msgSV.z;
+	StateVectorXV(3) = msgSV.vx;
+	StateVectorXV(4) = msgSV.vy;
+	StateVectorXV(5) = msgSV.vz;
+	return StateVectorXV;
 }
 
-Matrix<double> getStaveVectorA(const glonass_nav_data_block& msgSV) {
+Matrix getStaveVectorX(const glonass_nav_data_block& msgSV) {
 
-	Matrix<double> StateVector(3, 1, 0);
-	StateVector(0, 0) = msgSV.ax;
-	StateVector(1, 0) = msgSV.ay;
-	StateVector(2, 0) = msgSV.az;
-	return StateVector;
+	Matrix StateVectorX(3, 1, 0);
+	StateVectorX(0) = msgSV.x;
+	StateVectorX(1) = msgSV.y;
+	StateVectorX(2) = msgSV.z;
+	return StateVectorX;
+}
+
+Matrix getStaveVectorV(const glonass_nav_data_block& msgSV) {
+
+	Matrix StateVectorV(3, 1, 0);
+	StateVectorV(0) = msgSV.vx;
+	StateVectorV(1) = msgSV.vy;
+	StateVectorV(2) = msgSV.vz;
+	return StateVectorV;
+}
+
+Matrix getStaveVectorA(const glonass_nav_data_block& msgSV) {
+
+	Matrix StateVectorA(3, 1, 0);
+	StateVectorA(0, 0) = msgSV.ax;
+	StateVectorA(1, 0) = msgSV.ay;
+	StateVectorA(2, 0) = msgSV.az;
+	return StateVectorA;
 }
 
 Orbits select(const Orbits& orbs, const set<int>& sats) {

@@ -64,9 +64,9 @@ Observations select(const Observations& obs, const set<int>& sats, const string&
 	return obs_selected;
 }
 
-Matrix<double> getRanges(const Observations& obs) {
+Matrix getRanges(const Observations& obs) {
 	int size = obs.ranges.at("R").size();
-	Matrix<double> ranges(size, 1, 0);
+	Matrix ranges(size, 1, 0);
 	int i = 0;
 	for (auto& item : obs.ranges.at("R")) {
 		ranges(i, 0) = item.second;

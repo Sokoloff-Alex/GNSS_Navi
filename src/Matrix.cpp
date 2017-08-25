@@ -1,6 +1,3 @@
-#ifndef MATRIX_CPP_
-#define MATRIX_CPP_
-
 /*
  * Matrix.cpp
  *
@@ -16,8 +13,7 @@
 
 using namespace std;
 
-template<typename T>
-Matrix<T>::Matrix(int myRows, int myCols, const T& myInitial) {
+Matrix::Matrix(int myRows, int myCols, const double& myInitial) {
 	mat.resize(myRows);
 	for (int i = 0; i < myRows; ++i) {
 		mat[i].resize(myCols, myInitial);
@@ -26,8 +22,7 @@ Matrix<T>::Matrix(int myRows, int myCols, const T& myInitial) {
 	cols = myCols;
 }
 
-template<typename T>
-Matrix<T>::Matrix() { // defined for state vectors with 6 elements
+Matrix::Matrix() { // defined for state vectors with 6 elements
 	rows = 6;
 	cols = 1;
 	mat.resize(rows);
@@ -36,19 +31,16 @@ Matrix<T>::Matrix() { // defined for state vectors with 6 elements
 	}
 }
 
-template<typename T>
-Matrix<T>::Matrix(const Matrix<T>& rhs) {
+Matrix::Matrix(const Matrix& rhs) {
 	mat = rhs.mat;
 	rows = rhs.getRows();
 	cols = rhs.getCols();
 }
 
-template<typename T>
-Matrix<T>::~Matrix() {
+Matrix::~Matrix() {
 }
 
-template<typename T>
-bool Matrix<T>::sameDimentions(const Matrix<T>& lhs, const Matrix<T>& rhs) {
+bool Matrix::sameDimentions(const Matrix& lhs, const Matrix& rhs) {
 	if (lhs.cols == rhs.cols && lhs.rows == rhs.rows) {
 		return true;
 	} else {
@@ -56,8 +48,15 @@ bool Matrix<T>::sameDimentions(const Matrix<T>& lhs, const Matrix<T>& rhs) {
 	}
 }
 
-template<typename T>
-Matrix<T>& Matrix<T>::operator=(const Matrix<T>& rhs) {
+bool Matrix::sameDimentions(const Matrix& lhs, const Matrix& rhs) const {
+	if (lhs.cols == rhs.cols && lhs.rows == rhs.rows) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
+Matrix& Matrix::operator=(const Matrix& rhs) {
 	if (this == &rhs) {
 		return *this;
 	}
@@ -70,8 +69,7 @@ Matrix<T>& Matrix<T>::operator=(const Matrix<T>& rhs) {
 	}
 }
 
-template<typename T>
-Matrix<T> Matrix<T>::operator+(const Matrix<T>& rhs) {
+Matrix Matrix::operator+(const Matrix& rhs) {
 	if (!sameDimentions(*this, rhs)) {
 		throw "Matrices have different dimensions";
 	} else {
@@ -85,8 +83,7 @@ Matrix<T> Matrix<T>::operator+(const Matrix<T>& rhs) {
 	}
 }
 
-template<typename T>
-Matrix<T>& Matrix<T>::operator+=(const Matrix<T>& rhs) {
+Matrix& Matrix::operator+=(const Matrix& rhs) {
 	if (!sameDimentions(*this, rhs)) {
 		throw "Matrices have different dimensions";
 	} else {
@@ -99,8 +96,7 @@ Matrix<T>& Matrix<T>::operator+=(const Matrix<T>& rhs) {
 	}
 }
 
-template<typename T>
-Matrix<T> Matrix<T>::operator-(const Matrix<T>& rhs) {
+Matrix Matrix::operator-(const Matrix& rhs) {
 	if (!sameDimentions(*this, rhs)) {
 		throw "Matrices have different dimensions";
 	} else {
@@ -114,8 +110,21 @@ Matrix<T> Matrix<T>::operator-(const Matrix<T>& rhs) {
 	}
 }
 
-template<typename T>
-Matrix<T>& Matrix<T>::operator-=(const Matrix<T>& rhs) {
+Matrix Matrix::operator-(const Matrix& rhs) const {
+	if (!sameDimentions(*this, rhs)) {
+		throw "Matrices have different dimensions";
+	} else {
+		Matrix result(rows, cols, 0.0);
+		for (int i = 0; i < rows; ++i) {
+			for (int j = 0; j < cols; ++j) {
+				result(i, j) = this->mat[i][j] - rhs(i, j);
+			}
+		}
+		return result;
+	}
+}
+
+Matrix& Matrix::operator-=(const Matrix& rhs) {
 	if (!sameDimentions(*this, rhs)) {
 		throw "Matrices have different dimensions";
 	} else {
@@ -130,8 +139,8 @@ Matrix<T>& Matrix<T>::operator-=(const Matrix<T>& rhs) {
 
 // multiplication row by column (inner product or dot product)
 // A[n,m] * B[m,k] = C[n,k];
-template<typename T>
-Matrix<T> Matrix<T>::operator*(const Matrix<T>& rhs) {
+
+Matrix Matrix::operator*(const Matrix& rhs) {
 	if (cols != rhs.rows) {
 		throw "Matrices have different dimensions";
 	} else {
@@ -148,8 +157,8 @@ Matrix<T> Matrix<T>::operator*(const Matrix<T>& rhs) {
 }
 
 // matrix/scalar operations
-template<typename T>
-Matrix<T> Matrix<T>::operator+(const T& rhs) {
+
+Matrix Matrix::operator+(const double& rhs) {
 	Matrix result(rows, cols, 0.0);
 	for (int i = 0; i < rows; ++i) {
 		for (int j = 0; j < cols; ++j) {
@@ -159,8 +168,7 @@ Matrix<T> Matrix<T>::operator+(const T& rhs) {
 	return result;
 }
 
-template<typename T>
-Matrix<T>& Matrix<T>::operator+=(const T& rhs) {
+Matrix& Matrix::operator+=(const double& rhs) {
 	for (int i = 0; i < rows; ++i) {
 		for (int j = 0; j < cols; ++j) {
 			this->mat[i][j] = this->mat[i][j] + rhs;
@@ -169,8 +177,7 @@ Matrix<T>& Matrix<T>::operator+=(const T& rhs) {
 	return *this;
 }
 
-template<typename T>
-Matrix<T> Matrix<T>::operator-(const T& rhs) {
+Matrix Matrix::operator-(const double& rhs) {
 	Matrix result(rows, cols, 0.0);
 	for (int i = 0; i < rows; ++i) {
 		for (int j = 0; j < cols; ++j) {
@@ -180,8 +187,7 @@ Matrix<T> Matrix<T>::operator-(const T& rhs) {
 	return result;
 }
 
-template<typename T>
-Matrix<T>& Matrix<T>::operator-=(const T& rhs) {
+Matrix& Matrix::operator-=(const double& rhs) {
 	for (int i = 0; i < rows; ++i) {
 		for (int j = 0; j < cols; ++j) {
 			this->mat[i][j] = this->mat[i][j] - rhs;
@@ -190,8 +196,7 @@ Matrix<T>& Matrix<T>::operator-=(const T& rhs) {
 	return *this;
 }
 
-template<typename T>
-Matrix<T> Matrix<T>::operator*(const T& rhs) {
+Matrix Matrix::operator*(const double& rhs) {
 	Matrix result(rows, cols, 0.0);
 	for (int i = 0; i < rows; ++i) {
 		for (int j = 0; j < cols; ++j) {
@@ -201,8 +206,7 @@ Matrix<T> Matrix<T>::operator*(const T& rhs) {
 	return result;
 }
 
-template<typename T>
-Matrix<T>& Matrix<T>::operator*=(const T& rhs) {
+Matrix& Matrix::operator*=(const double& rhs) {
 	for (int i = 0; i < rows; ++i) {
 		for (int j = 0; j < cols; ++j) {
 			this->mat[i][j] = this->mat[i][j] * rhs;
@@ -211,8 +215,7 @@ Matrix<T>& Matrix<T>::operator*=(const T& rhs) {
 	return *this;
 }
 
-template<typename T>
-Matrix<T> Matrix<T>::operator/(const T& rhs) {
+Matrix Matrix::operator/(const double& rhs) {
 	if (rhs == 0) {
 		cout << "Error, Division by zero in matrix operations" << endl;
 		throw "Division by zero in matrix operations";
@@ -226,8 +229,7 @@ Matrix<T> Matrix<T>::operator/(const T& rhs) {
 	return result;
 }
 
-template<typename T>
-Matrix<T>& Matrix<T>::operator/=(const T& rhs) {
+Matrix& Matrix::operator/=(const double& rhs) {
 	if (rhs == 0) {
 		cout << "Error, Division by zero in matrix operations" << endl;
 		throw "Division by zero in matrix operations";
@@ -241,12 +243,12 @@ Matrix<T>& Matrix<T>::operator/=(const T& rhs) {
 }
 
 // Matrix/vector multiplication
-template<typename T>
-vector<T> Matrix<T>::operator*(const vector<T>& rhs) {
+
+vector<double> Matrix::operator*(const vector<double>& rhs) {
 	if (cols != rhs.size()) {
 		throw "Error, matrix*vector multiplication, wrong size";
 	}
-	vector<T> result(rows, 0);
+	vector<double> result(rows, 0);
 	for (int i = 0; i < rows; ++i) {
 		for (int j = 0; j < cols; ++j) {
 			result[i] = this->mat[i][j] * rhs[j]; // ok
@@ -256,45 +258,40 @@ vector<T> Matrix<T>::operator*(const vector<T>& rhs) {
 }
 
 // get diagonal elements
-template<typename T>
-vector<T> Matrix<T>::diag() {
+
+vector<double> Matrix::diag() {
 	int shortest_dim = 0;
 	if (rows < cols) {
 		shortest_dim = rows;
 	} else {
 		shortest_dim = rows;
 	}
-	vector<T> diagonal(shortest_dim, 0);
+	vector<double> diagonal(shortest_dim, 0);
 	for (int i = 0; i < shortest_dim; ++i) {
 		diagonal[i] = this->mat[i][i];
 	}
 	return diagonal;
 }
 
-template<typename T>
-T& Matrix<T>::operator()(const int& row, const int& col) {
+double& Matrix::operator()(const int& row, const int& col) {
 	return this->mat[row][col];
 }
 
-template<typename T>
-T& Matrix<T>::operator()(const int& row) {
+double& Matrix::operator()(const int& row) {
 	int col = 0;
 	return this->mat[row][col];
 }
 
-template<typename T>
-const T& Matrix<T>::operator()(const int& row, const int& col) const {
+const double& Matrix::operator()(const int& row, const int& col) const {
 	return this->mat[row][col];
 }
 
-template<typename T>
-const T& Matrix<T>::operator()(const int& row) const {
+const double& Matrix::operator()(const int& row) const {
 	int col = 0;
 	return this->mat[row][col];
 }
 
-template<typename T>
-bool Matrix<T>::hasElement(const int& row, const int& col) {
+bool Matrix::hasElement(const int& row, const int& col) {
 	if ((0 <= row && row < rows) && (0 <= col && col < cols)) {
 		return true;
 	} else {
@@ -302,28 +299,23 @@ bool Matrix<T>::hasElement(const int& row, const int& col) {
 	}
 }
 
-template<typename T>
-T& Matrix<T>::at(const int& row, const int& col) {
+double& Matrix::at(const int& row, const int& col) {
 	return this->mat[row][col];
 }
 
-template<typename T>
-const T& Matrix<T>::at(const int& row, const int& col) const {
+const double& Matrix::at(const int& row, const int& col) const {
 	return this->mat[row][col];
 }
 
-template<typename T>
-int Matrix<T>::getRows() const {
+int Matrix::getRows() const {
 	return rows;
 }
 
-template<typename T>
-int Matrix<T>::getCols() const {
+int Matrix::getCols() const {
 	return cols;
 }
 
-template<typename T>
-Matrix<T>& Matrix<T>::fill(const T& myValue) {
+Matrix& Matrix::fill(const double& myValue) {
 	for (int i = 0; i < rows; ++i) {
 		for (int j = 0; j < cols; ++j) {
 			this->mat[i][j] = myValue;
@@ -332,18 +324,17 @@ Matrix<T>& Matrix<T>::fill(const T& myValue) {
 	return *this;
 }
 
-template<typename T>
-void Matrix<T>::print() const {
+void Matrix::print() const {
 	for (int i = 0; i < rows; ++i) {
 		for (int j = 0; j < cols; ++j) {
-			cout << fixed << setw(20) << setprecision(6) << this->mat[i][j] << " ";
+			cout << fixed << setw(20) << setprecision(6) << this->mat[i][j]
+					<< " ";
 		}
 		cout << endl;
 	}
 }
 
-template<typename T>
-Matrix<T> Matrix<T>::transpose() {
+Matrix Matrix::transpose() {
 	Matrix result(cols, rows, 0.0);
 	for (int i = 0; i < rows; ++i) {
 		for (int j = 0; j < cols; ++j) {
@@ -353,8 +344,7 @@ Matrix<T> Matrix<T>::transpose() {
 	return result;
 }
 
-template<typename T>
-Matrix<T> Matrix<T>::minor(const int row, const int col) {
+Matrix Matrix::minor(const int row, const int col) {
 	Matrix minor(rows - 1, cols - 1, 0.0);
 
 	for (int i = 0; i < row; ++i) {
@@ -380,8 +370,7 @@ Matrix<T> Matrix<T>::minor(const int row, const int col) {
 	return minor;
 }
 
-template<typename T>
-double Matrix<T>::determinant() {
+double Matrix::determinant() {
 	double determinant = 0; // use always double
 	if (rows == cols) {
 		if (rows == 1) {
@@ -391,9 +380,12 @@ double Matrix<T>::determinant() {
 			determinant = mat[0][0] * mat[1][1] - mat[0][1] * mat[1][0];
 		}
 		if (rows == 3) {
-			determinant = mat[0][0] * mat[1][1] * mat[2][2] + mat[0][1] * mat[1][2] * mat[2][0]
-					+ mat[0][2] * mat[1][0] * mat[2][1] - mat[0][2] * mat[1][1] * mat[2][0]
-					- mat[0][1] * mat[1][0] * mat[2][2] - mat[0][0] * mat[1][2] * mat[2][1];
+			determinant = mat[0][0] * mat[1][1] * mat[2][2]
+					+ mat[0][1] * mat[1][2] * mat[2][0]
+					+ mat[0][2] * mat[1][0] * mat[2][1]
+					- mat[0][2] * mat[1][1] * mat[2][0]
+					- mat[0][1] * mat[1][0] * mat[2][2]
+					- mat[0][0] * mat[1][2] * mat[2][1];
 		}
 
 		if (rows > 3) { // for larger dimensions do recursive
@@ -416,8 +408,7 @@ double Matrix<T>::determinant() {
 	return determinant;
 }
 
-template<typename T>
-Matrix<T>& Matrix<T>::fillCheckBoard(const T& myValue1, const T& myValue2) {
+Matrix& Matrix::fillCheckBoard(const double& myValue1, const double& myValue2) {
 	for (int i = 0; i < rows; ++i) {
 		for (int j = 0; j < cols; ++j) {
 			if ((i + j) % 2 == 0) {
@@ -430,8 +421,7 @@ Matrix<T>& Matrix<T>::fillCheckBoard(const T& myValue1, const T& myValue2) {
 	return *this;
 }
 
-template<typename T>
-Matrix<T>& Matrix<T>::inverse() {
+Matrix& Matrix::inverse() {
 	// use Cramer law, ineffective for large matrixes
 	if (rows != cols) {
 		throw "Error, matrix is rectangular (matrix inversion)";
@@ -456,9 +446,8 @@ Matrix<T>& Matrix<T>::inverse() {
 	return *this;
 }
 
-template<typename T>
-Matrix<T> identity(const int& rows, const int& cols) {
-	Matrix<T> IdentityMatrix(rows, cols, 0);
+Matrix identity(const int& rows, const int& cols) {
+	Matrix IdentityMatrix(rows, cols, 0);
 	int minDimension = 0;
 	if (rows < cols) {
 		minDimension = rows;
@@ -471,24 +460,24 @@ Matrix<T> identity(const int& rows, const int& cols) {
 	return IdentityMatrix;
 }
 
-template<typename T>
-void printVector(const vector<T>& v) {
+void printVector(const vector<double>& v) {
 	for (auto& item : v) {
 		cout << item << endl;
 	}
 }
 
-template<typename T>
-Matrix<double> cross(const Matrix<T>& u, const Matrix<T>& v) {
-	if (u.getRows() == 3 && v.getRows() == 3 && u.getCols() == 1 && v.getCols() == 1) {
-		Matrix<double> res(3, 1, 0);
+Matrix cross(const Matrix& u, const Matrix& v) {
+	if (u.getRows() == 3 && v.getRows() == 3 && u.getCols() == 1
+			&& v.getCols() == 1) {
+		Matrix res(3, 1, 0);
 		res(0, 0) = u(1, 0) * v(2, 0) - u(2, 0) * v(1, 0);
 		res(1, 0) = u(2, 0) * v(0, 0) - u(0, 0) * v(2, 0);
 		res(2, 0) = u(0, 0) * v(1, 0) - u(1, 0) * v(1, 0);
 		return res;
 	}
-	if (u.getRows() == 1 && v.getRows() == 1 && u.getCols() == 3 && v.getCols() == 3) {
-		Matrix<double> res(1, 3, 0);
+	if (u.getRows() == 1 && v.getRows() == 1 && u.getCols() == 3
+			&& v.getCols() == 3) {
+		Matrix res(1, 3, 0);
 		res(0, 0) = u(0, 1) * v(0, 2) - u(0, 2) * v(0, 1);
 		res(0, 1) = u(0, 2) * v(0, 0) - u(0, 0) * v(0, 2);
 		res(0, 2) = u(0, 0) * v(0, 1) - u(0, 1) * v(0, 1);
@@ -499,18 +488,28 @@ Matrix<double> cross(const Matrix<T>& u, const Matrix<T>& v) {
 	}
 }
 
-template<typename T>
-double norm(const Matrix<T>& r) {
-	double x = r(0, 0);
-	double y = r(1, 0);
-	double z = r(2, 0);
-	double mag = sqrt(x * x + y * y + z * z);
+double norm(const Matrix& r) {
+	double mag = 0;
+	if (r.getRows() == 3) {
+		double x = r(0, 0);
+		double y = r(1, 0);
+		double z = r(2, 0);
+		mag = sqrt(x * x + y * y + z * z);
+	}
+	if (r.getRows() == 2) {
+		double x = r(0, 0);
+		double y = r(1, 0);
+		mag = sqrt(x * x + y * y);
+	}
+	if (r.getRows() == 1) {
+		mag = r(0, 0);
+	}
 	return mag;
 }
 
-template<typename T>
-double dot(const Matrix<T>& v1, const Matrix<T>& v2) {
-	if (v1.getCols() == v2.getRows() && v1.getRows() == 1 && v2.getCols() == 1) {
+double dot(const Matrix& v1, const Matrix& v2) {
+	if (v1.getCols() == v2.getRows() && v1.getRows() == 1
+			&& v2.getCols() == 1) {
 		double res = 0;
 		for (int i = 0; i < v1.getCols(); ++i) {
 			res += v1(0, i) * v2(i, 0);
@@ -522,16 +521,33 @@ double dot(const Matrix<T>& v1, const Matrix<T>& v2) {
 	}
 }
 
-template<typename T>
-Matrix<double> R3(const double& angleRadians) {
-	Matrix<double> R3(3, 3, 0.0);
-	R3(0, 0) = cos(angleRadians);
-	R3(0, 1) = sin(angleRadians);
-	R3(1, 0) = -sin(angleRadians);
-	R3(1, 1) = cos(angleRadians);
-	R3(2, 2) = 1;
-	return R3;
+Matrix R3(const double& angleRadians) {
+	Matrix R_3(3, 3, 0.0);
+	R_3(0, 0) = cos(angleRadians);
+	R_3(0, 1) = sin(angleRadians);
+	R_3(1, 0) = -sin(angleRadians);
+	R_3(1, 1) = cos(angleRadians);
+	R_3(2, 2) = 1;
+	return R_3;
 }
 
-#endif
+Matrix R2(const double& angleRadians) {
+	Matrix R2(3, 3, 0.0);
+	R2(0, 0) = cos(angleRadians);
+	R2(0, 1) = -sin(angleRadians);
+	R2(1, 1) = 1;
+	R2(2, 0) = sin(angleRadians);
+	R2(2, 2) = cos(angleRadians);
+	return R2;
+}
+
+Matrix R1(const double& angleRadians) {
+	Matrix R1(3, 3, 0.0);
+	R1(0, 0) = 1;
+	R1(1, 1) = cos(angleRadians);
+	R1(1, 2) = sin(angleRadians);
+	R1(2, 1) = -sin(angleRadians);
+	R1(2, 2) = cos(angleRadians);
+	return R1;
+}
 

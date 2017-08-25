@@ -29,6 +29,6 @@ set<int> intersect(const Observations& obs, const Orbits& orbs,
 Observations select(const Observations& obs, const set<int>& sats,
 		const string& sys);
 
-Matrix<double> getRanges(const Observations& obs);
+Matrix getRanges(const Observations& obs);
 
 #endif /* OBSERVATIONS_H_ */

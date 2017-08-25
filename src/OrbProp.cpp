@@ -13,12 +13,13 @@
 #include <math.h>
 #include "Matrix.h"
 #include "RINEXnav.h"
+#include "boost/math/constants/constants.hpp"
 
 using namespace std;
 
 //find first time derivatives of state vector (oblate Earth model)
-Matrix<double> getDerivatives(const double& t,
-		const Matrix<double>& StateVector, const Matrix<double>& Ams) {
+Matrix getDerivatives(const double& t, const Matrix& StateVector,
+		const Matrix& Ams) {
 
 	const double GM = 398600441.8 * pow(10, 6); // geocentric constant of Earth Gravity field (including Atmosphere), [m^3 / s^2]
 	const double Ae = 6378136; // large (equatorial) semi-axis of ellipsoid, [m]
@@ -40,7 +41,7 @@ Matrix<double> getDerivatives(const double& t,
 
 	double z2_by_r2 = z * z / r2;
 
-	Matrix<double> StateVecDot(6, 1, 0.0);
+	Matrix StateVecDot(6, 1, 0.0);
 
 	StateVecDot(0) = StateVector(3);
 	StateVecDot(1) = StateVector(4);
@@ -55,15 +56,15 @@ Matrix<double> getDerivatives(const double& t,
 	return StateVecDot;
 }
 
-Matrix<double> RungeKutta4order(const Matrix<double>& Y, const double& t,
-		const double& h, const Matrix<double>& Atb) {
+Matrix RungeKutta4order(const Matrix& Y, const double& t, const double& h,
+		const Matrix& Atb) {
 
-	Matrix<double> k1 = getDerivatives(t, Y, Atb) * h;
-	Matrix<double> k2 = getDerivatives(t + h / 2, k1 * h / 2 + Y, Atb);
-	Matrix<double> k3 = getDerivatives(t + h / 2, k2 * h / 2 + Y, Atb);
-	Matrix<double> k4 = getDerivatives(t + h, k3 * h + Y, Atb);
+	Matrix k1 = getDerivatives(t, Y, Atb) * h;
+	Matrix k2 = getDerivatives(t + h / 2, k1 * h / 2 + Y, Atb);
+	Matrix k3 = getDerivatives(t + h / 2, k2 * h / 2 + Y, Atb);
+	Matrix k4 = getDerivatives(t + h, k3 * h + Y, Atb);
 
-	Matrix<double> Ynew = (k1 + k2 * 2 + k3 * 2 + k4) / 6 + Y;
+	Matrix Ynew = (k1 + k2 * 2 + k3 * 2 + k4) / 6 + Y;
 	return Ynew;
 }
 
@@ -73,11 +74,10 @@ Orbits propagateOrbits(const glonass_nav_msg& glo_msg,
 	ofstream file_orb("D:/Dev/GNSS/obs/orbits.txt");
 	vector<int> sats;
 	Orbits LatestStatesAll;
-	Matrix<double> StateVector(6, 1, 0.0);
-	Matrix<double> A_tb(3, 1, 0.0);
-	Matrix<double> A_tb_dummy(6, 1, 0.0);
+	Matrix StateVector(6, 1, 0.0);
+	Matrix A_tb(3, 1, 0.0);
+	Matrix A_tb_dummy(6, 1, 0.0);
 	for (auto& msgSV : glo_msg.nav) {
-		Epoch EphemerisEpoch = msgSV.second.epoch;
 		if (TargetEpoch.hour == 0 && TargetEpoch.minutes <= 15) {
 			double stepT = 1;
 			double T0 = msgSV.second.epoch.toSeconds();
@@ -116,7 +116,7 @@ Orbits propagateOrbits(const glonass_nav_msg& glo_msg,
 Orbits propagateOrbits(Orbits& InitOrbits, const Epoch& TargetEpoch,
 		const int& stepT) {
 
-	Matrix<double> StateVectorUpd(6, 1, 0.0);
+	Matrix StateVectorUpd(6, 1, 0.0);
 
 	double Tinit = InitOrbits.epoch.toSeconds();
 	double Tmax = TargetEpoch.toSeconds();
@@ -133,13 +133,13 @@ Orbits propagateOrbits(Orbits& InitOrbits, const Epoch& TargetEpoch,
 	return InitOrbits;
 }
 
-Matrix<double> ECEFtoECI(const Matrix<double>& vECEF, const Epoch& epoch_UTC) {
+Matrix ECEFtoECI(const Matrix& vECEF, const Epoch& epoch_UTC) {
 
 	const double We = 7.2921151467 * pow(10, -5); // mean Earth rotation Rate, w.r.t. vernal equinox, [rad/s]
 	double Ang = We * epoch_UTC.toSeconds();
 
 	int nRows = vECEF.getRows();
-	Matrix<double> vECI(nRows, 1, 0);
+	Matrix vECI(nRows, 1, 0);
 
 	vECI(0) = vECEF(0) * cos(Ang) - vECEF(1) * sin(Ang);
 	vECI(1) = vECEF(0) * sin(Ang) + vECEF(1) * cos(Ang);
@@ -154,13 +154,13 @@ Matrix<double> ECEFtoECI(const Matrix<double>& vECEF, const Epoch& epoch_UTC) {
 	return vECI;
 }
 
-Matrix<double> ECItoECEF(const Matrix<double>& vECI, const Epoch& epoch_UTC) {
+Matrix ECItoECEF(const Matrix& vECI, const Epoch& epoch_UTC) {
 
 	const double We = 7.2921151467 * pow(10, -5); // mean Earth rotation Rate, w.r.t. vernal equinox, [rad/s]
 	double Ang = We * epoch_UTC.toSeconds();
 
 	int nRows = vECI.getRows();
-	Matrix<double> vECEF(nRows, 1, 0);
+	Matrix vECEF(nRows, 1, 0);
 
 	vECEF(0) = vECI(0) * cos(Ang) + vECI(1) * sin(Ang);
 	vECEF(1) = -vECI(0) * sin(Ang) + vECI(1) * cos(Ang);
@@ -179,7 +179,63 @@ Matrix<double> ECItoECEF(const Matrix<double>& vECI, const Epoch& epoch_UTC) {
 	return vECEF;
 }
 
-void printStateVector(const Matrix<double>& StateVector) {
+Matrix ECEFtoENU(const Matrix& Xecef, const Matrix& Xorigin) {
+
+	Matrix Xenu(3, 1, 0);
+	double latXoriginRad = atan2(Xorigin(1), Xorigin(0));
+	double lonXoriginRad = atan2(Xorigin(2),
+			sqrt(Xorigin(0) * Xorigin(0) + Xorigin(1) + Xorigin(1)));
+
+	Matrix Q1(3, 3, 0);
+	Q1(0, 0) = -1;
+	Q1(1, 1) = 1;
+	Q1(2, 2) = 1;
+
+	Matrix d = Xecef - Xorigin;
+	const double pi = boost::math::constants::pi<double>();
+
+//	Matrix R_3(3,3,0);
+//	R_3 = R3(latXoriginRad);
+	Matrix dhori(3, 1, 0);
+//	dhori = Q1 * ( R2(pi/2 - lonXoriginRad) * ( R3(latXoriginRad) * d));
+
+	return dhori;
+}
+
+Matrix ENUtoAzimuthElevation(const Matrix& Xenu) {
+
+	const double pi = boost::math::constants::pi<double>();
+	Matrix AzElev(2, 1, 0);
+
+	AzElev(0) = atan2(Xenu(1), Xenu(0)) * 180 / pi;
+	AzElev(1) = 90 - (acos(Xenu(2) / norm(Xenu)) * 180 / pi);
+	return AzElev;
+}
+
+Matrix ECEFtoAzimuthElevation(const Matrix& Xecef, const Matrix& Xorigin) {
+
+	Matrix Xenu(3, 1, 0);
+	Xenu = ECEFtoENU(Xecef, Xorigin);
+	Matrix AzElev(2, 1, 0);
+	AzElev = ENUtoAzimuthElevation(Xenu);
+	return AzElev;
+}
+
+Matrix MSGtoTopo(const glonass_nav_msg& glo_msg, const Matrix& Xorigin) {
+
+	Matrix AzElevStack(24, 2, 0);
+	Matrix AzElev(2, 1, 0);
+	Matrix Xecef(3, 1, 0);
+	for (unsigned int i = 0; i < glo_msg.sats.size(); ++i) {
+		Xecef = getStaveVectorX(glo_msg.nav.at(glo_msg.sats[i]));
+		AzElev = ECEFtoAzimuthElevation(Xecef, Xorigin);
+		AzElevStack(i, 0) = AzElev(0);
+		AzElevStack(i, 1) = AzElev(1);
+	}
+	return AzElevStack;
+}
+
+void printStateVector(const Matrix& StateVector) {
 	double r2 = StateVector(0) * StateVector(0)
 			+ StateVector(1) * StateVector(1) + StateVector(2) * StateVector(2);
 	double r = pow(r2, 0.5);
